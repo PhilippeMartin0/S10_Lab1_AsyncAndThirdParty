@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ZombieParty.Models;
 using ZombieParty.Models.Data;
 using ZombieParty.ViewModels;
@@ -15,16 +16,16 @@ namespace ZombieParty.Controllers
             _baseDonnees = baseDonnees;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            List<ZombieType> zombieTypesList = _baseDonnees.ZombieTypes.ToList();
+            List<ZombieType> zombieTypesList = await  this._baseDonnees.ZombieTypes.ToListAsync();
 
             return View(zombieTypesList);
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var zombies = _baseDonnees.Zombies.Where(z => z.ZombieTypeId == id);
+            var zombies = await this._baseDonnees.Zombies.Where(z => z.ZombieTypeId == id).ToListAsync();
 
             ZombieTypeVM zombieTypeVM = new()
             {
@@ -48,12 +49,12 @@ namespace ZombieParty.Controllers
         //POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(ZombieType zombieType)
+        public async Task<IActionResult> Create(ZombieType zombieType)
         {
             if (ModelState.IsValid)
             {
                 // Ajouter à la BD
-                _baseDonnees.ZombieTypes.Add(zombieType);
+               await _baseDonnees.ZombieTypes.AddAsync(zombieType);
                 _baseDonnees.SaveChanges();
                 TempData["Success"] = $"{zombieType.TypeName} zombie type added";
                 return this.RedirectToAction("Index");
@@ -62,21 +63,21 @@ namespace ZombieParty.Controllers
             return this.View(zombieType);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            ZombieType zombieType = _baseDonnees.ZombieTypes.Find(id);
+            ZombieType zombieType = await _baseDonnees.ZombieTypes.FindAsync(id);
             
             return View(zombieType);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(ZombieType zombieType)
+        public async Task<IActionResult> Edit(ZombieType zombieType)
         {
             if (ModelState.IsValid)
             {
                 _baseDonnees.ZombieTypes.Update(zombieType);
-                _baseDonnees.SaveChanges();
+               await _baseDonnees.SaveChangesAsync();
                 TempData["Success"] = $"ZombieType {zombieType.TypeName} has been modified";
                 return this.RedirectToAction("Index");
             }
@@ -84,9 +85,9 @@ namespace ZombieParty.Controllers
             return View(zombieType);
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            ZombieType? zombieType = _baseDonnees.ZombieTypes.Find(id);
+            ZombieType? zombieType = await _baseDonnees.ZombieTypes.FindAsync(id);
             if (zombieType == null)
             {
                 return NotFound();
@@ -97,16 +98,16 @@ namespace ZombieParty.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeletePost(int id)
+        public async Task<IActionResult> DeletePost(int id)
         {
-            ZombieType? zombieType = _baseDonnees.ZombieTypes.Find(id);
+            ZombieType? zombieType =  await _baseDonnees.ZombieTypes.FindAsync(id);
             if (zombieType == null)
             {
                 return NotFound();
             }
 
             _baseDonnees.ZombieTypes.Remove(zombieType);
-            _baseDonnees.SaveChanges();
+             await _baseDonnees.SaveChangesAsync();
             TempData["Success"] = $"ZombieType {zombieType.TypeName} has been removed";
             return RedirectToAction("Index");
         }
